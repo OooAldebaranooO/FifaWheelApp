@@ -108,7 +108,7 @@
   /* ── Pointer ── */
   .pointer {
     position: absolute;
-    top: 50%;
+    top: 47%;
     z-index: 10;
     transform: rotate(180deg);
     pointer-events: none;
@@ -217,7 +217,7 @@
 
 <div class="app">
   <header>
-    <p class="logo"><img src="long-green.png" style="height: 100px;"></p>
+    <p class="logo"><img src="long-green.png" style="height: 90px;"></p>
     <h1>Roue des Buts<br>de <span>Thomas</span></h1>
   </header>
 
@@ -238,7 +238,7 @@
   </div>
 
   <div class="result-panel" id="resultPanel">
-    <div class="result-emoji" id="resultEmoji">🎯</div>
+    <div class="result-emoji" id="resultEmoji"></div>
     <p class="result-label">Prochain but</p>
     <div class="result-text" id="resultText">Lance la roue !</div>
   </div>
@@ -389,7 +389,7 @@ function spinWheel() {
   spinning = true;
   btn.disabled = true;
 
-  document.getElementById('resultEmoji').textContent = '🌀';
+  //document.getElementById('resultEmoji').textContent = '🌀';
   document.getElementById('resultText').textContent  = '…';
   document.getElementById('resultText').classList.remove('flash');
 
