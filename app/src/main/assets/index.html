@@ -108,9 +108,9 @@
   /* ── Pointer ── */
   .pointer {
     position: absolute;
-    top: 50%;
+    top: 45%;
     z-index: 10;
-    transform: translateY(-50%);
+    transform: rotate(180deg);
     pointer-events: none;
   }
   .pointer svg {
@@ -120,7 +120,7 @@
   /* ── Spin button ── */
   .btn-spin {
     position: absolute;
-    width: 90px; height: 90px;
+    width: 130px; height: 130px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, var(--gold), var(--gold2));
     border: 4px solid rgba(255,255,255,0.9);
@@ -145,12 +145,11 @@
       0 2px 8px rgba(0,0,0,0.6);
   }
   .btn-spin .spin-ball {
-    font-size: 28px;
+    font-size: 80px;
     line-height: 1;
   }
   .btn-spin .spin-label {
     font-size: 9px;
-    font-weight: 900;
     letter-spacing: 2px;
     color: var(--darker);
     text-transform: uppercase;
@@ -218,7 +217,7 @@
 
 <div class="app">
   <header>
-    <p class="logo">FIFA 26</p>
+    <p class="logo"><img src="long-green.png" style="height: 100px;"></p>
     <h1>Roue des Buts<br>de <span>Thomas</span></h1>
   </header>
 
@@ -233,8 +232,8 @@
     </div>
     <!-- Central spin button -->
     <button class="btn-spin" id="btnSpin" onclick="spinWheel()">
-      <span class="spin-ball">⚽</span>
-      <span class="spin-label">SPIN</span>
+      <span class="spin-ball"><img src="thomas.png"></span>
+      <!--<span class="spin-label">SPIN</span>-->
     </button>
   </div>
 
@@ -248,22 +247,25 @@
 <script>
 // ── Segments ──────────────────────────────────────────────
 const SEGMENTS = [
-  { label: "Roulette",                    emoji: "", color: "#1a6b3a", text: "#fff" },
-  { label: "Scorpion\n(debout ou lancé)", emoji: "", color: "#0d5c8f", text: "#fff" },
-  { label: "Retournée",                   emoji: "", color: "#8b1a1a", text: "#fff" },
-  { label: "Ballon piqué",                emoji: "", color: "#1a6b3a", text: "#fff" },
-  { label: "Tir en finesse",              emoji: "", color: "#6a3090", text: "#fff" },
-  { label: "Sombréro\n+ But",             emoji: "", color: "#1a6b3a", text: "#fff" },
-  { label: "Coup du foulard",             emoji: "", color: "#0d5c8f", text: "#fff" },
-  { label: "Tallonade",                   emoji: "", color: "#8b1a1a", text: "#fff" },
-  { label: "Frappe\nLointaine",           emoji: "", color: "#6a3090", text: "#fff" },
-  { label: "Tête",                        emoji: "", color: "#1a6b3a", text: "#fff" },
-  { label: "Dribble\n+ Tir",              emoji: "", color: "#0d5c8f", text: "#fff" },
-  { label: "Coup\nFranc",                 emoji: "", color: "#8b1a1a", text: "#fff" },
-  { label: "Corner",                      emoji: "", color: "#6a3090", text: "#fff" },
-  { label: "Penalty",                     emoji: "", color: "#1a6b3a", text: "#fff" },
-  { label: "Contre-\nAttaque",            emoji: "", color: "#0d5c8f", text: "#fff" },
-  { label: "Petit Pont\n+ Tir",           emoji: "", color: "#8b1a1a", text: "#fff" },
+  { label: "Roulette",            emoji: "", color: "#02ca51", text: "#fff" },
+  { label: "Coup du\nScorpion",    emoji: "", color: "#108dde", text: "#fff" },
+  { label: "Retournée",           emoji: "", color: "#da1919", text: "#fff" },
+  { label: "Ballon piqué",        emoji: "", color: "#ecec05", text: "#fff" },
+
+  { label: "Tir en finesse",      emoji: "", color: "#02ca51", text: "#fff" },
+  { label: "Sombréro + But",      emoji: "", color: "#108dde", text: "#fff" },
+  { label: "Coup du\nfoulard",     emoji: "", color: "#da1919", text: "#fff" },
+  { label: "Tallonade",           emoji: "", color: "#ecec05", text: "#fff" },
+
+  { label: "Frappe de loin",      emoji: "", color: "#02ca51", text: "#fff" },
+  { label: "Tête",                emoji: "", color: "#108dde", text: "#fff" },
+  { label: "Dribble + Tir",       emoji: "", color: "#da1919", text: "#fff" },
+  { label: "Coup Franc",          emoji: "", color: "#ecec05", text: "#fff" },
+
+  { label: "Corner",              emoji: "", color: "#02ca51", text: "#fff" },
+  { label: "Penalty",             emoji: "", color: "#108dde", text: "#fff" },
+  { label: "Contre-Attaque",      emoji: "", color: "#da1919", text: "#fff" },
+  { label: "Petit Pont\n+ Tir",   emoji: "", color: "#ecec05", text: "#fff" },
 ];
 
 // ── Canvas setup ──────────────────────────────────────────
@@ -345,9 +347,9 @@ function drawWheel(angle) {
 
     ctx.save();
     ctx.translate(tx, ty);
-    ctx.rotate(mid + Math.PI / 2);
+    ctx.rotate(mid);
 
-    ctx.font = `bold ${Math.max(9, radius * 0.075)}px Arial Black, Arial`;
+    ctx.font = `${Math.max(9, radius * 0.085)}px Arial, sans-serif`;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle    = 'rgba(0,0,0,0.4)';
