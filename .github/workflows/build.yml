@@ -42,7 +42,7 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: "FIFA Wheel v1.0.${{ github.run_number }}"
           body: |
-            ## FIFA 26 - Roue des Buts
+            ## FIFA 26 - Roue des Buts de Thomas
             Telecharge app-release.apk ci-dessous et installe-le sur Android.
           files: app/build/outputs/apk/release/app-release.apk
           draft: false
