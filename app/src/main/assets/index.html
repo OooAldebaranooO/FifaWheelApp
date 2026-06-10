@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FIFA 26 – Roue des Buts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --green:   #00A550;
+    --green2:  #007A3D;
+    --gold:    #FFD700;
+    --gold2:   #FFA500;
+    --dark:    #0A0F1E;
+    --darker:  #060B14;
+    --white:   #FFFFFF;
+    --gray:    #8A9BB8;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--darker);
+    font-family: 'Arial Black', 'Arial', sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* ── Background pitch lines ── */
+  .pitch-bg {
+    position: fixed; inset: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 60px,
+        rgba(0,165,80,0.04) 60px,
+        rgba(0,165,80,0.04) 62px
+      ),
+      radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0,120,60,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: space-between;
+    height: 100vh;
+    padding: 24px 16px 32px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    z-index: 2;
+  }
+  .logo {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 2px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 24px rgba(255,215,0,0.3);
+  }
+  h1 span { color: var(--gold); }
+
+  /* ── Wheel container ── */
+  .wheel-wrap {
+    position: relative;
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%;
+  }
+
+  /* Outer glow ring */
+  .glow-ring {
+    position: absolute;
+    border-radius: 50%;
+    background: transparent;
+    border: 3px solid rgba(255,215,0,0.25);
+    box-shadow:
+      0 0 30px rgba(255,215,0,0.15),
+      0 0 60px rgba(0,165,80,0.1),
+      inset 0 0 30px rgba(255,215,0,0.05);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  canvas#wheel {
+    display: block;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px rgba(255,215,0,0.6),
+      0 0 40px rgba(255,215,0,0.25),
+      0 8px 48px rgba(0,0,0,0.7);
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Pointer ── */
+  .pointer {
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .pointer svg {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+  }
+
+  /* ── Spin button ── */
+  .btn-spin {
+    position: absolute;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, var(--gold), var(--gold2));
+    border: 4px solid rgba(255,255,255,0.9);
+    box-shadow:
+      0 0 0 3px rgba(255,165,0,0.4),
+      0 0 30px rgba(255,215,0,0.5),
+      0 6px 20px rgba(0,0,0,0.6),
+      inset 0 2px 4px rgba(255,255,255,0.4);
+    cursor: pointer;
+    z-index: 20;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+    transition: transform 0.1s, box-shadow 0.1s;
+    -webkit-user-select: none;
+  }
+  .btn-spin:active {
+    transform: scale(0.92);
+    box-shadow:
+      0 0 0 3px rgba(255,165,0,0.4),
+      0 0 15px rgba(255,215,0,0.4),
+      0 2px 8px rgba(0,0,0,0.6);
+  }
+  .btn-spin .spin-ball {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .btn-spin .spin-label {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--darker);
+    text-transform: uppercase;
+  }
+
+  /* ── Result panel ── */
+  .result-panel {
+    width: 100%;
+    min-height: 88px;
+    background: linear-gradient(135deg, rgba(0,165,80,0.15), rgba(0,120,50,0.08));
+    border: 1.5px solid rgba(0,165,80,0.35);
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 12px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+  .result-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,215,0,0.03));
+    pointer-events: none;
+  }
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  .result-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--white);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(255,215,0,0.4);
+    transition: all 0.3s;
+    min-height: 28px;
+  }
+  .result-emoji {
+    font-size: 28px;
+    margin-bottom: 2px;
+  }
+
+  /* ── Result flash animation ── */
+  @keyframes flashIn {
+    0%   { transform: scale(0.8) translateY(10px); opacity: 0; }
+    60%  { transform: scale(1.08) translateY(-2px); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .flash { animation: flashIn 0.45s cubic-bezier(.25,.8,.25,1) forwards; }
+
+  /* ── Confetti canvas ── */
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 100; }
+</style>
+</head>
+<body>
+<div class="pitch-bg"></div>
+<canvas id="confetti"></canvas>
+
+<div class="app">
+  <header>
+    <p class="logo">FIFA 26</p>
+    <h1>Roue des <span>Buts</span></h1>
+  </header>
+
+  <div class="wheel-wrap" id="wheelWrap">
+    <div class="glow-ring" id="glowRing"></div>
+    <canvas id="wheel"></canvas>
+    <!-- Pointer on the right -->
+    <div class="pointer" id="pointer" style="right:0">
+      <svg width="32" height="32" viewBox="0 0 32 32">
+        <polygon points="28,16 6,6 10,16 6,26" fill="#FFD700" stroke="#0A0F1E" stroke-width="2"/>
+      </svg>
+    </div>
+    <!-- Central spin button -->
+    <button class="btn-spin" id="btnSpin" onclick="spinWheel()">
+      <span class="spin-ball">⚽</span>
+      <span class="spin-label">SPIN</span>
+    </button>
+  </div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="result-emoji" id="resultEmoji">🎯</div>
+    <p class="result-label">Prochain but</p>
+    <div class="result-text" id="resultText">Lance la roue !</div>
+  </div>
+</div>
+
+<script>
+// ── Segments ──────────────────────────────────────────────
+const SEGMENTS = [
+  { label: "Frappe\nLointaine",  emoji: "💥", color: "#1a6b3a", text: "#fff" },
+  { label: "Tête",               emoji: "🤯", color: "#0d5c8f", text: "#fff" },
+  { label: "Dribble\n+ Tir",    emoji: "🔥", color: "#8b1a1a", text: "#fff" },
+  { label: "Coup\nFranc",        emoji: "🌀", color: "#6a3090", text: "#fff" },
+  { label: "Corner",             emoji: "📐", color: "#1a6b3a", text: "#fff" },
+  { label: "Penalty",            emoji: "⚡", color: "#8b5a00", text: "#fff" },
+  { label: "Contre-\nAttaque",  emoji: "🚀", color: "#0d5c8f", text: "#fff" },
+  { label: "Petit Pont\n+ Tir",  emoji: "🎭", color: "#8b1a1a", text: "#fff" },
+  { label: "Ciseau /\nRetourné", emoji: "✨", color: "#6a3090", text: "#fff" },
+  { label: "Coup du\nScorpion",  emoji: "🦂", color: "#8b5a00", text: "#fff" },
+];
+
+// ── Canvas setup ──────────────────────────────────────────
+const canvas  = document.getElementById('wheel');
+const ctx     = canvas.getContext('2d');
+const wrap    = document.getElementById('wheelWrap');
+const pointer = document.getElementById('pointer');
+const glowRing = document.getElementById('glowRing');
+const btn     = document.getElementById('btnSpin');
+
+let size = 0;
+let radius = 0;
+let currentAngle = 0;
+let spinning = false;
+
+function resize() {
+  const ww = wrap.clientWidth;
+  const wh = wrap.clientHeight;
+  const minDim = Math.min(ww, wh) - 24;
+  size = Math.max(240, Math.min(minDim, 380));
+  canvas.width  = size;
+  canvas.height = size;
+  radius = size / 2;
+
+  // Glow ring
+  glowRing.style.width  = (size + 28) + 'px';
+  glowRing.style.height = (size + 28) + 'px';
+
+  // Pointer: offset to touch wheel edge
+  const pOffset = Math.round(ww / 2 - radius - 8);
+  pointer.style.right = pOffset + 'px';
+
+  drawWheel(currentAngle);
+}
+
+// ── Draw ──────────────────────────────────────────────────
+function drawWheel(angle) {
+  const n     = SEGMENTS.length;
+  const arc   = (2 * Math.PI) / n;
+  const cx    = radius;
+  const cy    = radius;
+
+  ctx.clearRect(0, 0, size, size);
+
+  // Drop shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur  = 18;
+
+  for (let i = 0; i < n; i++) {
+    const start = angle + i * arc;
+    const end   = start + arc;
+    const seg   = SEGMENTS[i];
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, radius - 2, start, end);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+
+    // Slice border
+    ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Text
+  for (let i = 0; i < n; i++) {
+    const start   = angle + i * arc;
+    const mid     = start + arc / 2;
+    const seg     = SEGMENTS[i];
+    const lines   = seg.label.split('\n');
+    const textR   = radius * 0.65;
+    const tx      = cx + textR * Math.cos(mid);
+    const ty      = cy + textR * Math.sin(mid);
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(mid + Math.PI / 2);
+
+    ctx.font = `bold ${Math.max(9, radius * 0.075)}px Arial Black, Arial`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle    = 'rgba(0,0,0,0.4)';
+
+    const lineH = Math.max(11, radius * 0.095);
+    const offsetY = lines.length > 1 ? -lineH / 2 : 0;
+
+    // Shadow
+    lines.forEach((line, li) => {
+      ctx.fillText(line, 1, offsetY + li * lineH + 1);
+    });
+
+    ctx.fillStyle = seg.text;
+    lines.forEach((line, li) => {
+      ctx.fillText(line, 0, offsetY + li * lineH);
+    });
+
+    ctx.restore();
+  }
+
+  // Center circle
+  const cGrad = ctx.createRadialGradient(cx - 8, cy - 8, 4, cx, cy, 40);
+  cGrad.addColorStop(0, '#FFFDE0');
+  cGrad.addColorStop(1, '#FFD700');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 42, 0, 2 * Math.PI);
+  ctx.fillStyle = cGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+// ── Spin logic ────────────────────────────────────────────
+function spinWheel() {
+  if (spinning) return;
+  spinning = true;
+  btn.disabled = true;
+
+  document.getElementById('resultEmoji').textContent = '🌀';
+  document.getElementById('resultText').textContent  = '…';
+  document.getElementById('resultText').classList.remove('flash');
+
+  const n        = SEGMENTS.length;
+  const arc      = (2 * Math.PI) / n;
+  const extraSpins = (8 + Math.floor(Math.random() * 8)) * 2 * Math.PI;
+  const stopAngle  = Math.random() * 2 * Math.PI;
+  const totalAngle = extraSpins + stopAngle;
+  const duration   = 3500 + Math.random() * 1500;
+
+  const startAngle = currentAngle;
+  const startTime  = performance.now();
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = easeOut(t);
+
+    currentAngle = startAngle + totalAngle * eased;
+    drawWheel(currentAngle);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      btn.disabled = false;
+      showResult();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function showResult() {
+  const n   = SEGMENTS.length;
+  const arc = (2 * Math.PI) / n;
+
+  // Pointer is at angle=0 on the right (3 o'clock)
+  // Normalize current angle to find which segment is under pointer
+  let normalized = ((-currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  const idx = Math.floor(normalized / arc) % n;
+  const seg = SEGMENTS[idx];
+
+  const emojiEl = document.getElementById('resultEmoji');
+  const textEl  = document.getElementById('resultText');
+  const panel   = document.getElementById('resultPanel');
+
+  emojiEl.textContent = seg.emoji;
+  textEl.textContent  = seg.label.replace('\n', ' ');
+
+  void textEl.offsetWidth; // reflow
+  textEl.classList.add('flash');
+
+  // Pulse panel border
+  panel.style.borderColor = 'rgba(255,215,0,0.8)';
+  panel.style.boxShadow   = '0 0 20px rgba(255,215,0,0.3)';
+  setTimeout(() => {
+    panel.style.borderColor = '';
+    panel.style.boxShadow   = '';
+  }, 600);
+
+  launchConfetti();
+}
+
+// ── Confetti ──────────────────────────────────────────────
+function launchConfetti() {
+  const c   = document.getElementById('confetti');
+  const cx  = c.getContext('2d');
+  c.width   = window.innerWidth;
+  c.height  = window.innerHeight;
+
+  const colors = ['#FFD700','#00A550','#FF6B35','#FFFFFF','#9B59B6'];
+  const pieces = Array.from({ length: 80 }, () => ({
+    x: Math.random() * c.width,
+    y: -10 - Math.random() * 100,
+    r: 3 + Math.random() * 5,
+    d: 2 + Math.random() * 4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    tilt: Math.random() * 10 - 5,
+    tiltAngle: 0,
+    tiltSpeed: 0.1 + Math.random() * 0.2,
+  }));
+
+  let frame = 0;
+  function drawConfetti() {
+    cx.clearRect(0, 0, c.width, c.height);
+    pieces.forEach(p => {
+      p.y  += p.d;
+      p.x  += Math.sin(frame * 0.01 + p.tiltAngle) * 1.5;
+      p.tiltAngle += p.tiltSpeed;
+      cx.beginPath();
+      cx.ellipse(p.x, p.y, p.r, p.r * 0.5, p.tiltAngle, 0, 2 * Math.PI);
+      cx.fillStyle = p.color;
+      cx.fill();
+    });
+    frame++;
+    if (frame < 120) requestAnimationFrame(drawConfetti);
+    else cx.clearRect(0, 0, c.width, c.height);
+  }
+  requestAnimationFrame(drawConfetti);
+}
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
